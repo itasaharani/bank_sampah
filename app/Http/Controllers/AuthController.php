@@ -15,9 +15,10 @@ class AuthController extends Controller
 
     public function simpan(Request $request){
         User::create ([
-            'name'=>$request->name,
             'email'=>$request->email,
-            'password'=>bcrypt($request->password)
+            'username'=>$request->username,
+            'password'=>bcrypt($request->password),
+            'role'=>$request->role,
         ]);
 
         return redirect('/');
@@ -27,20 +28,27 @@ class AuthController extends Controller
         return view('login');
     }
 
-    public function ceklogin(Request $request){
-        if(Auth::attempt([
-            'email'=>$request->email,
-            'password'=>$request->password
-        ]))
-
-        {
-            return redirect ('/');
-
+    public function ceklogin(Request $request)
+    {
+        // validate input request
+        $datalogin = [
+            'email' => $request->email,
+            'password' => $request->password,
+        ];
+        if (Auth::attempt($datalogin)) { 
+            // hak akses
+            if (Auth::user()->role == 'pengguna') {
+                return redirect('/home');
+            } elseif (Auth::user()->role == 'driver') {
+                return redirect('/homepengepul');
+            } elseif (Auth::user()->role == 'petugas') {
+                return redirect('/homepetugas');
+            }
         } else {
-            return redirect ('/');
+            return redirect('/login')->withErrors('Email atau Password tidak sesuai!')->withInput();
         }
     }
-
+    
     public function logout(){
         Auth::logout();
         return redirect ('/');
